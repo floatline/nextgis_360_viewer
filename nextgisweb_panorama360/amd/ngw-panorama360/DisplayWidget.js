@@ -19,14 +19,17 @@ define([
 
         title: i18n.gettext("Panorama360"),
 
-        buildRendering: function(){
-			this.inherited(arguments);
-		},
+        buildRendering: function () {
+            this.inherited(arguments);
+        },
 
         // featureFields value comes from extension.py file
-        renderValue: function (featureFields) {
+        renderValue: function (params) {
+            var layerId  = params[0];
+            var featureId = params[1];
+            var featureFields = params[2];
+            console.log(layerId, featureId, featureFields);
             var webmapId = this.webmapId;
-
             return api.route("resource.item", {
                 id: webmapId
             }).get({
@@ -46,20 +49,22 @@ define([
                 this.component = reactApp.default(
                     Panorama360Display.default,
                     {
-                        url: url
+                        url: url,
+                        featureId: featureId,
+                        layerId: layerId
                     },
                     this.domNode
                 );
                 return true;
             });
 
-           
+
         },
         isValidUrl: function (url) {
             var pattern = new RegExp(/^(https?:\/\/)?([\w.\-]+)\.([a-z]{2,})(\/[\w.\-%]*)*\/?$/i);
             return pattern.test(url);
 
         },
- 
+
     });
 })

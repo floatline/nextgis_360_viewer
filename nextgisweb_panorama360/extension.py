@@ -16,7 +16,8 @@ class Panorama360Extension(FeatureExtension):
 
 
     def serialize(self, feature):
-        return feature.fields
+        return self.layer.id, feature.id, feature.fields
+        # pass buffer here?
 
         
     def deserialize(self, feature, data):

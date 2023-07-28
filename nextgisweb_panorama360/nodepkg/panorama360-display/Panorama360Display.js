@@ -1,14 +1,15 @@
 import { Button, Image, Modal } from "@nextgisweb/gui/antd";
-import { useRef, useLayoutEffect } from "react";
+import { useRef, useEffect, useLayoutEffect } from "react";
 import i18n from "@nextgisweb/pyramid/i18n!gui";
 import showModal from "@nextgisweb/gui/showModal";
 import PanoramaIcon from "@material-icons/svg/panorama_photosphere/baseline.svg";
+import { route } from "@nextgisweb/pyramid/api";
 import "pannellum"
 
 import "./Panorama360Modal.less"
 import "pannellum/build/pannellum.css"
 
-const PannellumModal = ({ url, ...props }) => {
+const PannellumModal = ({ url }) => {
 
     const pannellumWrapper = useRef(null);
 
@@ -44,7 +45,26 @@ const PannellumModal = ({ url, ...props }) => {
     )
 };
 
-export const Panorama360Display = ({ url }) => {
+export const Panorama360Display = ({ url, featureId, layerId }) => {
+
+    const radius = 500000;
+    useEffect(async () => {
+        const feature = await route("feature_layer.feature.item", {
+            id: layerId,
+            fid: featureId
+        }).get();
+        const nearestPoints = await route("feature_layer.feature.collection", {
+            id: layerId
+        }).get({query: {
+            limit: 5,
+            order_by: "distance",
+            distance_geom: feature.geom,
+            offset: 1
+        }});
+
+        console.log(nearestPoints);
+    }, [])
+
 
     return (<div className="ngw-panorama360-identify-button"
     >
