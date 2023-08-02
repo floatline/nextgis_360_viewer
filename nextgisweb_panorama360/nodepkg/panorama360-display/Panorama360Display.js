@@ -9,7 +9,7 @@ import "pannellum"
 import "./Panorama360Modal.less"
 import "pannellum/build/pannellum.css"
 
-const PannellumModal = ({ url }) => {
+const PannellumModal = ({ url, ...props }) => {
 
     const pannellumWrapper = useRef(null);
 
@@ -46,24 +46,6 @@ const PannellumModal = ({ url }) => {
 };
 
 export const Panorama360Display = ({ url, featureId, layerId }) => {
-
-    const radius = 500000;
-    useEffect(async () => {
-        const feature = await route("feature_layer.feature.item", {
-            id: layerId,
-            fid: featureId
-        }).get();
-        const nearestPoints = await route("feature_layer.feature.collection", {
-            id: layerId
-        }).get({query: {
-            limit: 5,
-            order_by: "distance",
-            distance_geom: feature.geom,
-            offset: 1
-        }});
-
-        console.log(nearestPoints);
-    }, [])
 
 
     return (<div className="ngw-panorama360-identify-button"
