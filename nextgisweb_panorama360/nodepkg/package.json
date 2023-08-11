@@ -3,6 +3,15 @@
     "version": "0.0.0",
     "type": "module",
     "dependencies" :{
-        "pannellum": "2.5.6"
+        "pannellum": "2.5.6",
+        "@photo-sphere-viewer/core": ">=5.1.7",
+        "@photo-sphere-viewer/virtual-tour-plugin": ">=5.1.7",
+        "@photo-sphere-viewer/markers-plugin": ">=5.1.7",
+        "@photo-sphere-viewer/compass-plugin": ">=5.1.7"
+
+
+
+
+
     }
 }

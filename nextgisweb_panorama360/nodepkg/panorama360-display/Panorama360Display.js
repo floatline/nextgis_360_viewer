@@ -4,6 +4,9 @@ import i18n from "@nextgisweb/pyramid/i18n!gui";
 import showModal from "@nextgisweb/gui/showModal";
 import PanoramaIcon from "@material-icons/svg/panorama_photosphere/baseline.svg";
 import { route } from "@nextgisweb/pyramid/api";
+
+import {Viewer} from '@photo-sphere-viewer/core'
+
 import "pannellum"
 
 import "./Panorama360Modal.less"
@@ -12,54 +15,86 @@ import "pannellum/build/pannellum.css"
 
 
 
-const PannellumModal = ({ url, startPoint, points, ...props }) => {
-    const changeUrl = (event, handlerArgs) => {
+const PannellumModal = ({ startPoint, points, panoramaField, setFid, ...props }) => {
+
+    const clickedOn = (event, handlerArgs) => {
+        setFid(handlerArgs);
         console.log(handlerArgs);
     }
-    const [url_, setUrl_] = useState(url);
-    console.log(url_, url);
 
     const getYaw = (startPoint, endPoint) => {
         const pattern = /-?\d+(\.\d+)?/g;
-        const [startLong, startLat] = startPoint.match(pattern).map((x) => parseInt(x));
-        const [endLong, endLat] = endPoint.match(pattern).map((x) => parseInt(x));
+        const [startLong, startLat] = startPoint.match(pattern).map(x => parseInt(x));
+        const [endLong, endLat] = endPoint.match(pattern).map(x => parseInt(x));
         const yawRad = Math.atan2(endLong - startLong, endLat - startLat);
         return (yawRad * 180 / Math.PI + 360) % 360;
     };
-    
+
     const generateHotspots = (startPoint, points) => {
         console.log(startPoint);
         var hotspots = [];
         for (const point of points) {
             const hotspot = {};
-            hotspot["yaw"] = getYaw(startPoint, point.geom);
+            hotspot["yaw"] = getYaw(startPoint.geom, point.geom);
             hotspot["pitch"] = 0;
             hotspot["type"] = "info";
-            hotspot["clickHandlerFunc"] = setUrl_;
-            hotspot["clickHandlerArgs"] = point.fields.panorama_url;
+            //hotspot["sceneId"] = point.id;
+            hotspot["clickHandlerArgs"] = point.id;
+            hotspot["clickHandlerFunction"] = clickedOn;
             hotspots.push(hotspot);
         }
         return hotspots;
     };
 
 
-
+    console.log("component is rendering");
     const pannellumWrapper = useRef(null);
-
     useLayoutEffect(() => {
         const hotspots = generateHotspots(startPoint, points);
-        pannellumWrapper.current = window.pannellum.viewer(pannellumWrapper.current, {
-            autoLoad: true,
-            type: "equirectangular",
-            panorama: url_,
-            hotSpots: hotspots
+
+        if (!(pannellumWrapper.current instanceof window.pannellum.viewer)) {
+            pannellumWrapper.current = window.pannellum.viewer(pannellumWrapper.current, {
+                default: {
+                    firstScene: startPoint.id,
+                    autoload: true
+                },
+                scenes: {
+                    [startPoint.id]: {
+                        autoload: true,
+                        panorama: startPoint.fields[panoramaField],
+                        type: "equirectangular",
+                        hotSpots: hotspots
+                    },
+                }
+            })
+        }
+
+        else {
+            var scene = {
+                [startPoint]: {
+                    autoload: true,
+                    panorama: startPoint.fields[panoramaField],
+                    type: "equirectangular",
+                    hotSpots: hotspots
+                }
+            }
+            console.log(scene)
+            pannellumWrapper.current.addScene(scene);
+            pannellumWrapper.current.loadScene(startPoint.id);
+            //pannellumWrapper.current.removeScene(oldSceneId);
+            // pannellumWrapper.current.on("scenechange", clickedOn)
+            console.log(startPoint)
+        }
 
 
-        });
+
+
+
         return () => {
             pannellumWrapper.current.destroy()
         }
-    }, [url_]);
+    }, [startPoint]);
+
 
     return (
         <Modal
@@ -82,24 +117,27 @@ const PannellumModal = ({ url, startPoint, points, ...props }) => {
     )
 };
 
-export const Panorama360Display = ({ url, featureId, layerId }) => {
+export const Panorama360Display = ({ url, featureId, layerId, panoramaField }) => {
 
     const [startPoint, setStartPoint] = useState(null);
     const [points, setPoints] = useState(null);
+    const [fid, setFid] = useState(featureId);
+
+
 
     useEffect(() => {
         const controller = new AbortController();
-
         const getPoints = async () => {
+            console.log("getting points");
 
             const feature = await route("feature_layer.feature.item", {
                 id: layerId,
-                fid: featureId
+                fid: fid
             }).get({
                 signal: controller.signal,
                 cache: true
             });
-            setStartPoint(sp => feature.geom);
+            setStartPoint(sp => feature);
             const nearestPoints = await route("feature_layer.feature.collection", {
                 id: layerId
             }).get({
@@ -115,17 +153,15 @@ export const Panorama360Display = ({ url, featureId, layerId }) => {
             setPoints(p => nearestPoints);
             console.log(nearestPoints);
         }
-        getPoints();
+
+        getPoints(controller);
 
 
         return () => {
             controller.abort()
         }
 
-    }, [])
-    console.log(typeof points);
-    console.log(Array.isArray(points));
-    console.log(points, startPoint);
+    }, [fid])
 
 
     return (<div className="ngw-panorama360-identify-button"
@@ -144,17 +180,17 @@ export const Panorama360Display = ({ url, featureId, layerId }) => {
             height="50%"
             width="100%"
             onClick={() => {
-                if (points && startPoint) {
-                    const modal = showModal(PannellumModal, {
-                        url,
-                        startPoint,
-                        points,
-                        onCancel: e => {
-                            modal.destroy();
-                        }
-                    })
-                }
-            }}
+                const modal = showModal(PannellumModal, {
+                    startPoint,
+                    points,
+                    panoramaField,
+                    setFid,
+                    onCancel: e => {
+                        modal.destroy();
+                    }
+                })
+            }
+            }
         >
         </Image>
     </div>)

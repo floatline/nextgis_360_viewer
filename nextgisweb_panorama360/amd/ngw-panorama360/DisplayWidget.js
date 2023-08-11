@@ -51,7 +51,8 @@ define([
                     {
                         url: url,
                         featureId: featureId,
-                        layerId: layerId
+                        layerId: layerId,
+                        panoramaField: panoramaLayerField
                     },
                     this.domNode
                 );
