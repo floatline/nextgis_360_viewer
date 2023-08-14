@@ -4,6 +4,7 @@
     "type": "module",
     "dependencies" :{
         "pannellum": "2.5.6",
+        "three": ">=0.155.0",
         "@photo-sphere-viewer/core": ">=5.1.7",
         "@photo-sphere-viewer/virtual-tour-plugin": ">=5.1.7",
         "@photo-sphere-viewer/markers-plugin": ">=5.1.7",
