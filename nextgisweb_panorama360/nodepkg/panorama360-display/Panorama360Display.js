@@ -28,7 +28,7 @@ const PhotosphereModal = ({ featureId, layerId, panoramaField, ...props }) => {
     const getCoords = (point) => {
         const pattern = /-?\d+(\.\d+)?/g;
         const [long, lat] = point.match(pattern).map(x => parseFloat(x));
-        return [long, lat]
+        return [long, lat];
     };
 
     // nodes are connected in a tree with one startPoint and other child nodes
@@ -42,8 +42,6 @@ const PhotosphereModal = ({ featureId, layerId, panoramaField, ...props }) => {
                 srs: 4326
             }
         });
-        console.log(startPoint);
-        // setStartPoint(sp => feature);
         const node = await route("feature_layer.feature.collection", {
             id: layerId
         }).get({
@@ -57,7 +55,6 @@ const PhotosphereModal = ({ featureId, layerId, panoramaField, ...props }) => {
                 cache: true
             }
         }).then(points => {
-            console.log(points)
             const node = {};
             node['id'] = startPoint.id;
             node['panorama'] = startPoint.fields[panoramaField];
@@ -75,9 +72,8 @@ const PhotosphereModal = ({ featureId, layerId, panoramaField, ...props }) => {
         return node;
     };
 
-
-
     const photosphereWrapper = useRef(null);
+
     useEffect(() => {
         console.log("rendering");
         photosphereWrapper.current = new Viewer({
@@ -93,19 +89,13 @@ const PhotosphereModal = ({ featureId, layerId, panoramaField, ...props }) => {
                     getNode: getNode,
                     startNodeId: featureId
                 }]
-
             ]
-
-
         });
-
-
-
 
         return () => {
             photosphereWrapper.current.destroy()
-        }
-    }, [])
+        };
+    }, []);
 
 
 
